@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta name="author" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+
+    <link rel="shortcut icon" href="https://www.vpon.com/en/assets/vpon.ico">
+    <title>Taiwan Vote Info</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"
+        crossorigin="anonymous">
+    <style>
+        html,
+        body {
+            margin: 0;
+
+            width: 100vw;
+            height: 100vh;
+            font-size: 0;
+            overflow: hidden;
+        }
+
+        #vote,
+        #indicator {
+            width: 50vw;
+            height: 100vh;
+            display: inline-block;
+            overflow: hidden;
+        }
+
+        #vote {
+            background: #f7951f;
+            /*rgb(247,149,31)*/
+        }
+
+        #indicator {
+            background: #EEE;
+            /*rgb(247,149,31)*/
+        }
+
+
+        select.target {
+            position: absolute;
+            font-size: 18px;
+            margin: 5px;
+        }
+
+        #DDL_indicator {
+            float: right;
+        }
+
+        #popup {
+            position: absolute;
+            padding: 10px;
+            border-radius: 5px;
+            background: #FFF;
+            border: 1px solid #AAA;
+            overflow: hidden;
+            width: 30px;
+            height: 30px;
+            bottom: 5px;
+            right: 5px;
+            z-index: 99999;
+            transition: .5s ease-in-out;
+            -webkit-transition: .5s ease-in-out;
+        }
+
+        #toggerIcon {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            font-size: 25px;
+            text-align: center;
+            line-height: 30px;
+            color: #AAA;
+            z-index: 99999;
+            -ms-transform: rotate(90deg) translateY(2px);
+            /* IE 9 */
+            -webkit-transform: rotate(90deg) translateY(2px);
+            /* Safari */
+            transform: rotate(90deg) translateY(2px);
+        }
+
+        #toggerIcon:hover {
+            color: #555;
+        }
+
+        #popup #expand {
+            display: block;
+        }
+
+        #popup #compress {
+            display: none;
+        }
+
+        #popup.open #expand {
+            display: none;
+        }
+
+        #popup.open #compress {
+            display: block;
+        }
+
+        #popup .content {
+            opacity: 0;
+            transition: opacity .5s;
+            -webkit-transition: opacity .5s;
+        }
+
+        #popup.open .content {
+            opacity: 1;
+        }
+
+        #popup.open {
+            width: 700px;
+            height: 700px;
+        }
+
+        .tick line {
+            stroke: #CCC;
+        }
+
+        .tick:nth-of-type(11) line {
+            stroke: #F00;
+        }
+
+        .xAxis path,
+        .yAxis path {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        #titleX,
+        #titleY {
+            position: absolute;
+            display: inline-block;
+
+            font-size: 18px;
+            text-align: center;
+        }
+
+        #titleX {
+            width: 100%;
+            bottom: 20px;
+        }
+
+        #titleY {
+            height: 100%;
+            -webkit-writing-mode: vertical-lr;
+            writing-mode: vertical-lr;
+            left: 20px;
+        }
+
+        .posList {
+            position: absolute;
+            list-style: none;
+            font-size: 18px;
+            margin-left: 50px;
+        }
+
+        .posList li {
+            display: inline;
+            padding-right: 20px;
+        }
+
+        .posList li .color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+
+        .selectInfo {
+            position: absolute;
+            font-size: 16px;
+            bottom: 0;
+            left: -500px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, .8);
+
+            transition: left .5s ease-in-out;
+            -webkit-transition: left .5s ease-in-out;
+        }
+
+        #selectInfo2{
+            bottom: 370px;
+        }
+
+        .selectInfo.open{
+            left: 0;
+        }
+
+        .selectInfo h6 {
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .selectInfo .indicatorInfo {
+            margin: 0;
+            color: #444;
+        }
+
+        .selectInfo .indicatorInfo span{
+            color:#F00;
+            font-weight: 900;
+        }
+
+        .LBL_targetVote {
+            margin: 0;
+            margin-top: 5px;
+            margin-left: 20px;
+            font-weight: 500;
+        }
+
+        .closeSelectInfo{
+            position: absolute;
+            right: 0;
+            top: 0;
+            z-index: 99999;
+            padding: 10px;
+        }
+
+        div.tooltip {	
+            position: absolute;			
+            text-align: center;											
+            padding: 5px;				
+            font: 12px sans-serif;		
+            background: #FFF;	
+            border: 0px;			
+            pointer-events: none;	
+            z-index:9999999;		
+        }
+        </style>
+
+</head>
+
+<body>
+    <div id="vote">
+        <select id="DDL_vote" class="target">
+            <option value="vote7" selected>公投第 7 案 - 反空汙</option>
+            <option value="vote8">公投第 8 案 - 反深澳電廠</option>
+            <option value="vote9">公投第 9 案 - 反核食</option>
+            <option value="vote10">公投第 10 案 - 婚姻定義(民法限定一男一女)</option>
+            <option value="vote11">公投第 11 案 - 適齡性平教育</option>
+            <option value="vote12">公投第 12 案 - 非婚姻保障同志(立專法)</option>
+            <option value="vote13">公投第 13 案 - 東奧正名</option>
+            <option value="vote14">公投第 14 案 - 婚姻平權(立民法)</option>
+            <option value="vote15">公投第 15 案 - 性平教育</option>
+            <option value="vote16">公投第 16 案 - 以核養綠</option>
+        </select>
+    </div>
+    <div id="indicator">
+        <select id="DDL_indicator" class="target">
+            <option value="lower40Percent" selected>年齡(40歲以下比例)</option>
+            <option value="agemiddlePercent">年齡中位數(30~55歲區間)</option>
+            <option value="incomePercent">收入中位數(40~110萬區間)</option>
+            <option value="married">曾經結婚比例</option>
+            <option value="collage">學歷(大學畢業比例)</option>
+        </select>
+    </div>
+
+    <div id="selectInfo1" class="selectInfo">
+        <div class="closeSelectInfo"><i class="fa fa-window-close" aria-hidden="true"></i></div>
+        <h6 class="LBL_TownName"></h6>
+        <ul class="indicatorInfo">
+            <li>年齡資料：<br/>
+                - 40歲以下人數 <span class="LBL_lower40"></span><br/>
+                - 40歲以上人數 <span class="LBL_upper40"></span><br/>
+                - 40歲以下人口比例 <span class="LBL_lower40Percent"></span>%<br/>
+                - 年齡中位數 <span class="LBL_agemiddlePercent"></span>
+            </li>
+            <li>大學畢業比例: <span class="LBL_collage"></span>%</li>
+            <li>收入中位數: <span class="LBL_income"></span>萬元/年</li>
+            <li>曾經結婚比例: <span class="LBL_married"></span>%</li>
+        </ul>
+        <p class="LBL_targetVote">公投第 7 案 - 反空汙</p>
+        <ul class="indicatorInfo">
+            <li>同意票數：<span class="LBL_agree"></span></li>
+            <li>不同意票數：<span class="LBL_disagree"></span></li>
+            <li>有效票同意票數比例：<span class="LBL_realAgreePercent"></span>%</li>
+            <li>有效票佔投票人口比例：<span class="LBL_votePercent"></span></li>
+        </ul>
+    </div>
+
+    <div id="selectInfo2" class="selectInfo">
+        <div class="closeSelectInfo"><i class="fa fa-window-close" aria-hidden="true"></i></div>
+        <h6 class="LBL_TownName"></h6>
+        <ul class="indicatorInfo">
+            <li>年齡資料：<br/>
+                - 40歲以下人數 <span class="LBL_lower40"></span><br/>
+                - 40歲以上人數 <span class="LBL_upper40"></span><br/>
+                - 40歲以下人口比例 <span class="LBL_lower40Percent"></span>%<br/>
+                - 年齡中位數 <span class="LBL_agemiddlePercent"></span>
+            </li>
+            <li>大學畢業比例: <span class="LBL_collage"></span>%</li>
+            <li>收入中位數: <span class="LBL_income"></span>萬元/年</li>
+            <li>曾經結婚比例: <span class="LBL_married"></span>%</li>
+        </ul>
+        <p class="LBL_targetVote">公投第 7 案 - 反空汙</p>
+        <ul class="indicatorInfo">
+            <li>同意票數：<span class="LBL_agree"></span></li>
+            <li>不同意票數：<span class="LBL_disagree"></span></li>
+            <li>有效票同意票數比例：<span class="LBL_realAgreePercent"></span>%</li>
+            <li>有效票佔投票人口比例：<span class="LBL_votePercent"></span></li>
+        </ul>
+    </div>
+
+    <div id="popup">
+        <div id="toggerIcon">
+            <i id="expand" class="fa fa-expand" aria-hidden="true"></i>
+            <i id="compress" class="fa fa-compress" aria-hidden="true"></i>
+        </div>
+
+        <div class="content">
+            <ul class="posList">
+                <li>
+                    <div class="color" id="color_N"></div>北部
+                </li>
+                <li>
+                    <div class="color" id="color_M"></div>中部
+                </li>
+                <li>
+                    <div class="color" id="color_S"></div>南部
+                </li>
+                <li>
+                    <div class="color" id="color_E"></div>東部
+                </li>
+                <li>
+                    <div class="color" id="color_O"></div>離島
+                </li>
+            </ul>
+            <div id="titleX"><span id="LBL_x">公投第 7 案 - 反空汙</span> 同意率</div>
+            <div id="titleY"><span id="LBL_y">40歲以下</span> 比率</div>
+            <div id="coordinate">
+            </div>
+        </div>
+    </div>
+
+    <script src="//d3js.org/d3.v4.min.js"></script>
+    <script src="//d3js.org/topojson.v1.min.js"></script>
+    <script src="//tw-img.vpon.com/img/js/jquery-1.12.4.min.js"></script>
+    <script src="js/regionInfo.js"></script>
+    <script>
+        const minIncome = 40; // 47.8
+        const maxIncome = 110; // 102.1
+        const rangeIncome = 70;
+
+        const minAge = 30; // 33.6346;
+        const maxAge = 55; //53.5595;
+
+        let selectIndex = 0;
+
+        const voteLabel = {
+            vote7: '公投第 7 案 - 反空汙',
+            vote8: '公投第 8 案 - 反深澳電廠',
+            vote9: '公投第 9 案 - 反核食',
+            vote10: '公投第 10 案 - 婚姻定義(民法限定一男一女)',
+            vote11: '公投第 11 案 - 適齡性平教育',
+            vote12: '公投第 12 案 - 非婚姻保障同志(立專法)',
+            vote13: '公投第 13 案 - 東奧正名',
+            vote14: '公投第 14 案 - 婚姻平權(立民法)',
+            vote15: '公投第 15 案 - 性平教育',
+            vote16: '公投第 16 案 - 以核養綠'
+        }
+
+        const selectTown = {
+            1:{
+                county: '',
+                town: ''
+            },
+            2:{
+                county: '',
+                town: ''
+            }
+        }
+
+        const indicatorLable = {
+            lower40Percent: '40歲以下',
+            agemiddlePercent: '年齡中位數(30-55)',
+            married: '曾經結婚',
+            collage: '大學畢業',
+            incomePercent: '收入中位數'
+        }
+
+        const chooseTarget = {
+            x: 'vote7',
+            y: 'lower40Percent'
+        }
+
+        const c10 = d3.scaleOrdinal(d3.schemeCategory10);
+        const countyColor = {
+            N: c10(1),
+            M: c10(2),
+            S: c10(3),
+            O: c10(4),
+            E: c10(5)
+        }
+
+        for (let key in countyColor) {
+            document.getElementById(`color_${key}`).style.background = countyColor[key];
+        }
+
+        const path = d3.geoPath();
+        const div = d3.select("body").append("div")	
+            .attr("class", "tooltip")				
+            .style("opacity", 0);
+
+        const mapObj = {
+            vote: {
+                bgColor: '#f7951f'
+            },
+            indicator: {
+                bgColor: '#ddd'
+            },
+        }
+
+        function setTaiwanMap(key, obj) {
+            obj.container = d3.select(`#${key}`)
+                .append('svg')
+                .attr('width', window.innerWidth * .5)
+                .attr('height', window.innerHeight)
+                .style("top", "0px")
+                .style("left", "0px");
+
+            obj.interactArea = obj.container.append("rect")
+                .attr('width', window.innerWidth * .5)
+                .attr('height', window.innerHeight)
+                .style('fill', obj.bgColor);
+
+            obj.group = obj.container.append("g");
+        }
+
+        for (let key in mapObj) {
+            setTaiwanMap(key, mapObj[key]);
+        }
+
+
+        const zoom = d3.zoom()
+            .scaleExtent([.8, 10])
+            .on('zoom', () => {
+                // console.log(d3.event.transform.x, d3.event.transform.y, d3.event.transform.k);
+                mapObj.vote.group.attr('transform', `translate(${d3.event.transform.x},${d3.event.transform.y}) scale(${d3.event.transform.k})`);
+                mapObj.indicator.group.attr('transform', `translate(${d3.event.transform.x},${d3.event.transform.y}) scale(${d3.event.transform.k})`);
+                // container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            });
+        mapObj.vote.container.call(zoom);
+        mapObj.indicator.container.call(zoom);
+
+        d3.queue()
+            .defer(d3.json, 'js/map/tw-county-topo.json')
+            .defer(d3.json, 'js/map/tw-town-topo.json')
+            .awaitAll((error, results) => {
+                if (error) throw error;
+
+                const counties = topojson.feature(results[0], results[0].objects.counties).features;
+                const towns = topojson.feature(results[1], results[1].objects.town).features;
+
+                for (let county in window.regionInfo) {
+                    const countyID = window.regionInfo[county].id;
+                    const voteCG = mapObj.vote.group.append("g");
+                    const indicatorCG = mapObj.indicator.group.append("g");
+
+                    // 描繪縣市輪廓
+                    const voteCountyPath = voteCG
+                        .selectAll('.county')
+                        .data(counties.filter(d => {
+                            return d.id === countyID;
+                        }))
+                        .enter().append('path')
+                        .attr('d', path)
+                        .style('fill', 'black')
+                        .style('stroke', d => {
+                            // return countyColor[d.properties.pos];
+                            return 'black';
+                        })
+                        .style('stroke-width', 1);
+
+                    const indicatorCountyPath = indicatorCG
+                        .selectAll('.county')
+                        .data(counties.filter(d => {
+                            return d.id === countyID;
+                        }))
+                        .enter().append('path')
+                        .attr('d', path)
+                        .style('fill', 'white')
+                        .style('stroke', d => {
+                            // return countyColor[d.properties.pos];
+                            return 'black';
+                        })
+                        .style('stroke-width', 1);
+
+                    // 塞入鄉鎮區
+                    const voteTownPaths = voteCG
+                        .selectAll('.town')
+                        .data(towns.filter(d => {
+                            return d.id.substring(0, 5) === countyID;
+                        }))
+                        .enter().append('path')
+                        .attr('class', 'town')
+                        .attr('d', path)
+                        .style('fill', function (i) {
+                            const town = window.regionInfo[i.properties.county][i.properties.town];
+                            return `rgba(255,255,255,${town[chooseTarget.x].realAgreePercent})`
+                        })
+                        .style('stroke', 'rgba(0,0,0,.1)')
+                        .style('stroke-width', .5)
+                        .on('click', clicked)
+                        .on("mouseover", function(d) {		
+                            div.transition()		
+                                .duration(200)		
+                                .style("opacity", .9);		
+                            div	.html(`${d.properties.county}${d.properties.town}`)	
+                                .style("left", (d3.event.pageX) + "px")		
+                                .style("top", (d3.event.pageY - 28) + "px");	
+                            })					
+                        .on("mouseout", function(d) {		
+                            div.transition()		
+                                .duration(500)		
+                                .style("opacity", 0);	
+                        });
+
+                    const indicatorTownPaths = indicatorCG
+                        .selectAll('.town')
+                        .data(towns.filter(d => {
+                            return d.id.substring(0, 5) === countyID;
+                        }))
+                        .enter().append('path')
+                        .attr('class', 'town')
+                        .attr('d', path)
+                        .style('fill', function (i) {
+                            const town = window.regionInfo[i.properties.county][i.properties.town];
+                            return `rgba(150,0,0,${town[chooseTarget.y]})`
+                        })
+                        .style('stroke', 'rgba(0,0,0,.1)')
+                        .style('stroke-width', .5)
+                        .on('click', clicked)
+                        .on("mouseover", function(d) {		
+                            div.transition()		
+                                .duration(200)		
+                                .style("opacity", .9);		
+                            div	.html(`${d.properties.county}${d.properties.town}`)	
+                                .style("left", (d3.event.pageX) + "px")		
+                                .style("top", (d3.event.pageY - 28) + "px");	
+                            })					
+                        .on("mouseout", function(d) {		
+                            div.transition()		
+                                .duration(500)		
+                                .style("opacity", 0);	
+                        });
+                }
+            })
+
+        function clicked(d) {
+            console.log(d);
+            if (d.id.length <= 5) {
+                console.log(d.properties.name, window.regionInfo[d.properties.name]);
+            } else {
+                console.log(`${d.properties.county}${d.properties.town}`, window.regionInfo[d.properties.county][d.properties.town]);
+
+                if(selectIndex == 1) selectIndex=2;
+                else selectIndex=1
+                setTownInfo(selectIndex, d.properties.county, d.properties.town);
+            }
+        }
+
+
+        document.getElementById('DDL_vote').addEventListener('change', e => {
+            chooseTarget.x = e.target.value;
+            mapObj.vote.group
+                .selectAll('.town')
+                .style('fill', function (i) {
+                    const town = window.regionInfo[i.properties.county][i.properties.town];
+                    return `rgba(255,255,255,${town[chooseTarget.x].realAgreePercent})`
+                });
+
+            document.getElementById("LBL_x").innerHTML = voteLabel[chooseTarget.x];
+            setTownInfo();
+            setCircle();
+        });
+
+        document.getElementById('DDL_indicator').addEventListener('change', e => {
+            chooseTarget.y = e.target.value;
+            mapObj.indicator.group
+                .selectAll('.town')
+                .style('fill', function (i) {
+                    const town = window.regionInfo[i.properties.county][i.properties.town];
+                    return `rgba(150,0,0,${town[chooseTarget.y]})`;
+                });
+
+            document.getElementById("LBL_y").innerHTML = indicatorLable[chooseTarget.y];
+
+            setCircle();
+        });
+
+        document.getElementById("toggerIcon").addEventListener('click', () => {
+            document.getElementById("popup").classList.toggle("open");
+            setCircle();
+        });
+
+        // -- 資料點 --
+        const coordData = [];
+        Object.keys(window.regionInfo).map(cKey => {
+            Object.keys(window.regionInfo[cKey]).map(tKey => {
+                if (tKey !== 'id') {
+                    const town = window.regionInfo[cKey][tKey];
+                    coordData.push({
+                        county: cKey,
+                        town: tKey,
+                        pos: '',
+                        properties: window.regionInfo[cKey][tKey]
+                    })
+                }
+            })
+        })
+
+
+        const width = 700
+        const height = 700
+        const padding = { top: 50, right: 50, bottom: 80, left: 80 }
+        const xAxisWidth = width - padding.left - padding.right
+        const yAxisWidth = height - padding.top - padding.bottom
+
+        const svg = d3.select("#coordinate").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+
+        const xScale = d3.scaleLinear()
+            .range([0, xAxisWidth])
+            .domain([0, 1]);
+
+        const yScale = d3.scaleLinear()
+            .range([0, yAxisWidth])
+            .domain([1, 0]);
+
+        const xAxis = d3.axisBottom()
+            .scale(xScale)
+            .ticks(20)
+            .tickFormat(function (d) {
+                const num = d * 100;
+                if (num === 100) return '100%';
+                else if (num % 10 === 0) return num;
+                else return '';
+            })
+            .tickSize(-yAxisWidth, -yAxisWidth)
+
+        const yAxis = d3.axisLeft()
+            .scale(yScale)
+            .ticks(20)
+            .tickFormat(function (d) {
+                const num = d * 100;
+                if (num === 100) return '100%';
+                else if (num % 10 === 0) return num;
+                else return '';
+            })
+            .tickSize(-xAxisWidth, -xAxisWidth);
+
+        const xAxisG = svg.append('g')
+            .attr("transform", `translate(${padding.left},${padding.top + yAxisWidth})`)
+            .classed("xAxis", true)
+            .call(xAxis);
+
+        const yAxisG = svg.append('g')
+            .attr("transform", `translate(${padding.left},${padding.top})`)
+            .classed("yAxis", true)
+            .call(yAxis);
+
+        const circle = svg.selectAll("circle")
+            .data(coordData)
+            .enter()
+            .append("circle")
+            .attr("fill", d => {
+                return countyColor[d.properties.pos];
+            })
+            .attr("cx", function (d) {
+                return padding.left + xScale(d.properties[chooseTarget.x].realAgreePercent)
+            })
+            .attr("cy", function (d) {
+                return padding.top + yScale(d.properties[chooseTarget.y])
+            })
+            .attr("r", 4)
+            .on('click', d => {
+                console.log(`${d.county}${d.town}`, window.regionInfo[d.county][d.town]);
+                
+                if(selectIndex == 1) selectIndex=2;
+                else selectIndex=1
+                setTownInfo(selectIndex, d.county, d.town);
+            })
+            .on("mouseover", function(d) {		
+                div.transition()		
+                    .duration(200)		
+                    .style("opacity", .9);		
+                div	.html(`${d.county}${d.town}`)	
+                    .style("left", (d3.event.pageX) + "px")		
+                    .style("top", (d3.event.pageY - 28) + "px");	
+                })					
+            .on("mouseout", function(d) {		
+                div.transition()		
+                    .duration(500)		
+                    .style("opacity", 0);	
+            });
+
+        function setCircle() {
+            circle
+            .attr("cx", function (d) {
+                return padding.left + xScale(d.properties[chooseTarget.x].realAgreePercent)
+            })
+            .attr("cy", function (d) {
+                return padding.top + yScale(d.properties[chooseTarget.y])
+            })
+
+        }
+
+        $('.closeSelectInfo').on('click', (e)=>{
+            selectIndex = 0;
+            $('.selectInfo').removeClass('open');
+        });
+
+        function setTownInfo(key, cName, tName) {
+            if(key){
+                selectTown[key].county = cName;
+                selectTown[key].town = tName;
+                
+                document.getElementById(`selectInfo${key}`).classList.add("open");
+                const town = window.regionInfo[cName][tName];
+                $(`#selectInfo${key} .LBL_TownName`).html(`${cName} ${tName}`);
+
+                $(`#selectInfo${key} .LBL_lower40`).html(addCommas(town.lower40));
+                $(`#selectInfo${key} .LBL_upper40`).html(addCommas(town.upper40));
+                $(`#selectInfo${key} .LBL_lower40Percent`).html( (town.lower40Percent * 100).toFixed(3));
+                $(`#selectInfo${key} .LBL_agemiddlePercent`).html(town.agemiddle);
+                $(`#selectInfo${key} .LBL_collage`).html((town.collage * 100).toFixed(3));
+                $(`#selectInfo${key} .LBL_income`).html(addCommas(town.income));
+                $(`#selectInfo${key} .LBL_married`).html((town.married * 100).toFixed(3));
+
+                const vote = town[chooseTarget.x];
+
+                $(`#selectInfo${key} .LBL_targetVote`).html(voteLabel[chooseTarget.x]);
+                $(`#selectInfo${key} .LBL_agree`).html(addCommas(vote.agree));
+                $(`#selectInfo${key} .LBL_disagree`).html(addCommas(vote.disagree));
+                $(`#selectInfo${key} .LBL_realAgreePercent`).html((vote.realAgreePercent * 100).toFixed(3));
+                $(`#selectInfo${key} .LBL_votePercent`).html((vote.votePercent * 100).toFixed(3));
+            }else{
+                for(let i=1;i<=2;i++){
+                    if(selectTown[i].county !== '' && selectTown[i].town !==''){
+                        const town = window.regionInfo[selectTown[i].county][selectTown[i].town];
+                        $(`#selectInfo${i} .LBL_TownName`).html(`${selectTown[i].county} ${selectTown[i].town}`);
+
+                        $(`#selectInfo${i} .LBL_lower40`).html(addCommas(town.lower40));
+                        $(`#selectInfo${i} .LBL_upper40`).html(addCommas(town.upper40));
+                        $(`#selectInfo${i} .LBL_lower40Percent`).html( (town.lower40Percent * 100).toFixed(3));
+                        $(`#selectInfo${i} .LBL_agemiddlePercent`).html(town.agemiddle);
+                        $(`#selectInfo${i} .LBL_collage`).html((town.collage * 100).toFixed(3));
+                        $(`#selectInfo${i} .LBL_income`).html(addCommas(town.income));
+                        $(`#selectInfo${i} .LBL_married`).html((town.married * 100).toFixed(3));
+
+                        const vote = town[chooseTarget.x];
+
+                        $(`#selectInfo${i} .LBL_targetVote`).html(voteLabel[chooseTarget.x]);
+                        $(`#selectInfo${i} .LBL_agree`).html(addCommas(vote.agree));
+                        $(`#selectInfo${i} .LBL_disagree`).html(addCommas(vote.disagree));
+                        $(`#selectInfo${i} .LBL_realAgreePercent`).html((vote.realAgreePercent * 100).toFixed(3));
+                        $(`#selectInfo${i} .LBL_votePercent`).html((vote.votePercent * 100).toFixed(3));
+                    }
+                }
+            }
+        }
+
+
+        function addCommas(number) {
+            var num = number.toString();
+            var pattern = /(-?\d+)(\d{3})/;
+
+            while (pattern.test(num)) {
+                num = num.replace(pattern, "$1,$2");
+
+            }
+            return num;
+        }
+    </script>
+</body>
+
+</html>
